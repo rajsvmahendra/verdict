@@ -2,6 +2,8 @@ import { resolveCompany } from "@/lib/agents/resolver";
 import { researchCompany } from "@/lib/agents/research";
 import { buildBullCase } from "@/lib/agents/bull";
 import { buildBearCase } from "@/lib/agents/bear";
+import { runSkepticAnalysis } from "@/lib/agents/skeptic";
+import { synthesizeVerdict } from "@/lib/agents/chair";
 import type {
     AgentStatuses,
     BearCase,
@@ -233,30 +235,28 @@ export async function bearNode(
     }
 }
 
+
 export async function skepticNode(
     inputState: VerdictGraphState
 ): Promise<VerdictGraphState> {
     let state = setAgentStatus(inputState, "skeptic", "running");
 
     try {
-        if (!state.bullCase || !state.bearCase) {
+        if (!state.bullCase || !state.bearCase || !state.researchData || !state.resolvedEntity) {
             return addGraphError(
                 state,
                 "skeptic",
-                "Skeptic Agent cannot run without both bullCase and bearCase.",
+                "Skeptic Agent cannot run without bullCase, bearCase, researchData, and resolvedEntity.",
                 false
             );
         }
 
-        const skepticNotes: SkepticNotes = {
-            flaggedClaims: [
-                "Bull case may overstate durability of placeholder competitive advantages.",
-            ],
-            missingConsiderations: [
-                "Need deeper validation of financial quality and market share durability.",
-            ],
-            adjustedConfidenceDelta: -0.1,
-        };
+        const { skepticNotes } = await runSkepticAnalysis(
+            state.resolvedEntity.name,
+            state.bullCase,
+            state.bearCase,
+            state.researchData
+        );
 
         return {
             ...state,
@@ -284,46 +284,38 @@ export async function chairNode(
     let state = setAgentStatus(inputState, "chair", "running");
 
     try {
-        if (!state.bullCase || !state.bearCase || !state.resolvedEntity) {
+        if (!state.bullCase || !state.bearCase || !state.resolvedEntity || !state.researchData) {
             return addGraphError(
                 state,
                 "chair",
-                "Chair Agent cannot run without resolvedEntity, bullCase, and bearCase.",
+                "Chair Agent cannot run without resolvedEntity, bullCase, bearCase, and researchData.",
                 false
             );
         }
 
-        const decisionConfidenceBase =
-            (state.bullCase.strengthRating + (10 - state.bearCase.severityRating)) /
-            20;
-        const skepticAdjustment = state.skepticNotes?.adjustedConfidenceDelta ?? 0;
-
-        const confidenceScore: ConfidenceScore = {
-            decisionConfidence: Math.max(
-                0,
-                Math.min(1, decisionConfidenceBase + skepticAdjustment)
-            ),
-            dataQualityConfidence: state.researchData?.dataCompleteness ?? 0.4,
-        };
-
+        const result = await synthesizeVerdict(
+            state.resolvedEntity.name,
+            state.bullCase,
+            state.bearCase,
+            state.skepticNotes,
+            state.skepticInvoked ?? false,
+            state.skepticSkipReason,
+            state.researchData,
+            state.sources ?? state.researchData.sources
+        );
         return {
             ...state,
-            verdict: "WATCHLIST",
-            confidenceScore,
-            finalThesis: `Stub synthesis: ${state.resolvedEntity.name} shows both upside and risk signals, so the placeholder graph returns a neutral Watchlist outcome at scaffolding stage.`,
-            keyStrengths: [
-                "Plausible business model",
-                "Recent expansion-oriented signals",
-            ],
-            keyRisks: [
-                "Incomplete financial visibility",
-                "Competitive pressure remains unresolved",
-            ],
-            skepticInvoked: state.skepticInvoked ?? false,
-            skepticSkipReason:
-                state.skepticInvoked === true
-                    ? undefined
-                    : "Skeptic was not invoked by stub graph conditions.",
+            verdict: result.verdict,
+            confidenceScore: result.confidenceScore,
+            finalThesis: result.finalThesis,
+            keyStrengths: result.keyStrengths,
+            keyRisks: result.keyRisks,
+            strongestBullArgument: result.strongestBullArgument,
+            strongestBearArgument: result.strongestBearArgument,
+            skepticChallenge: result.skepticChallenge,
+            verdictReasoning: result.verdictReasoning,
+            bandingReason: result.bandingReason,
+            sources: result.sources,
             agentStatuses: {
                 ...state.agentStatuses,
                 chair: "complete",

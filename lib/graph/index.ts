@@ -171,6 +171,43 @@ const VerdictStateAnnotation = Annotation.Root({
         ) => updated,
         default: () => undefined,
     }),
+
+    strongestBullArgument: Annotation<string | undefined>({
+        reducer: (
+            _current: string | undefined,
+            updated: string | undefined
+        ) => updated,
+        default: () => undefined,
+    }),
+    strongestBearArgument: Annotation<string | undefined>({
+        reducer: (
+            _current: string | undefined,
+            updated: string | undefined
+        ) => updated,
+        default: () => undefined,
+    }),
+    skepticChallenge: Annotation<string | undefined>({
+        reducer: (
+            _current: string | undefined,
+            updated: string | undefined
+        ) => updated,
+        default: () => undefined,
+    }),
+    verdictReasoning: Annotation<string | undefined>({
+        reducer: (
+            _current: string | undefined,
+            updated: string | undefined
+        ) => updated,
+        default: () => undefined,
+    }),
+    bandingReason: Annotation<string | undefined>({
+        reducer: (
+            _current: string | undefined,
+            updated: string | undefined
+        ) => updated,
+        default: () => undefined,
+    }),
+
     sources: Annotation<Source[] | undefined>({
         reducer: (
             _current: Source[] | undefined,

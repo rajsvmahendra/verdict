@@ -70,14 +70,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                 { status: 500 }
             );
         }
-
-        // Success — full verdict
+        // Success — full verdict with all Section 4a explainability fields
         return NextResponse.json(
             {
                 status: "success",
                 verdict: result.verdict,
                 confidenceScore: result.confidenceScore,
                 finalThesis: result.finalThesis,
+
+                // Section 4a — all five explainability fields
+                explainability: {
+                    whyThisVerdict: result.bandingReason,
+                    strongestBullArgument: result.strongestBullArgument,
+                    strongestBearArgument: result.strongestBearArgument,
+                    skepticChallenge: result.skepticChallenge,
+                    verdictReasoning: result.verdictReasoning,
+                },
+
                 keyStrengths: result.keyStrengths,
                 keyRisks: result.keyRisks,
                 bullCase: result.bullCase,

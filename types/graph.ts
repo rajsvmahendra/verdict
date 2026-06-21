@@ -106,6 +106,12 @@ export interface VerdictGraphState {
     finalThesis?: string;
     keyStrengths?: string[];
     keyRisks?: string[];
+    // Explainability fields (Section 4a — all five must be present in every verdict)
+    strongestBullArgument?: string;
+    strongestBearArgument?: string;
+    skepticChallenge?: string;
+    verdictReasoning?: string;
+    bandingReason?: string;
     sources?: Source[]; // Deduplicated across all agents
 
     // System fields
