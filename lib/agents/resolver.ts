@@ -10,8 +10,9 @@
  * No company-specific hardcoded logic. Generalizes to any input.
  */
 
-import { getStructuredModel } from "@/lib/gemini";
+import { getStructuredModelWithFallback } from "@/lib/gemini";
 import type { ResolvedEntity } from "@/types/graph";
+
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -103,14 +104,10 @@ export interface ResolverResult {
 export async function resolveCompany(
     companyNameRaw: string
 ): Promise<ResolverResult> {
-    const model = getStructuredModel("fast");
     const prompt = buildResolverPrompt(companyNameRaw);
-
-    const result = await model.generateContent(prompt);
-    const raw = result.response.text();
+    const raw = await getStructuredModelWithFallback(prompt);
     const parsed = parseResolverResponse(raw);
 
-    // Case 1: Clearly resolved
     if (parsed.resolved && !parsed.ambiguous && parsed.entity) {
         const resolvedEntity: ResolvedEntity = {
             name: parsed.entity.name,
@@ -127,7 +124,6 @@ export async function resolveCompany(
         };
     }
 
-    // Case 2: Ambiguous or unresolvable
     return {
         resolved: false,
         needsClarification: true,

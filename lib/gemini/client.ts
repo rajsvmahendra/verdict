@@ -44,6 +44,7 @@ function getClient(): GoogleGenerativeAI {
  */
 export const MODELS = {
     fast: "gemini-2.5-flash",
+    fallback: "gemini-2.0-flash",
     capable: "gemini-2.5-pro",
 } as const;
 
@@ -91,3 +92,37 @@ export function getStructuredModel(type: ModelType = "fast") {
         },
     });
 }
+
+/**
+ * Attempts the fast model first, falls back to gemini-2.0-flash on 429.
+ * Used by all agents to survive free-tier quota exhaustion gracefully.
+ */
+export async function getStructuredModelWithFallback(
+    prompt: string
+): Promise<string> {
+    const models: Array<ModelType> = ["fast", "fallback"];
+
+    for (const modelType of models) {
+        try {
+            const model = getStructuredModel(modelType);
+            const result = await model.generateContent(prompt);
+            return result.response.text();
+        } catch (error) {
+            const is429 =
+                error instanceof Error && error.message.includes("429");
+
+            if (is429 && modelType !== "fallback") {
+                console.warn(
+                    `[Verdict] ${MODELS[modelType]} quota exceeded, falling back to ${MODELS.fallback}`
+                );
+                continue;
+            }
+
+            throw error;
+        }
+    }
+
+    throw new Error("[Verdict] All models exhausted — quota exceeded on all available models.");
+}
+
+

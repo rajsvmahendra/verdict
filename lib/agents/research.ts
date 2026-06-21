@@ -11,7 +11,7 @@
  * - No company-specific hardcoded logic anywhere in this file.
  */
 
-import { getStructuredModel } from "@/lib/gemini";
+import { getStructuredModelWithFallback } from "@/lib/gemini";
 import type { ResearchData, Source } from "@/types/graph";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -210,11 +210,8 @@ export async function researchCompany(
     ticker: string | undefined,
     description: string
 ): Promise<ResearchResult> {
-    const model = getStructuredModel("fast");
     const prompt = buildResearchPrompt(companyName, ticker, description);
-
-    const result = await model.generateContent(prompt);
-    const raw = result.response.text();
+    const raw = await getStructuredModelWithFallback(prompt);
     const parsed = parseResearchResponse(raw);
 
     const sources = buildSources(parsed.sourcesList, companyName);

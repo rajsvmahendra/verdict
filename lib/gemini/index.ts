@@ -1,2 +1,2 @@
-export { getModel, getStructuredModel, MODELS } from "./client";
+export { getModel, getStructuredModel, getStructuredModelWithFallback, MODELS } from "./client";
 export type { ModelType } from "./client";

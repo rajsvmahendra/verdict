@@ -1,5 +1,7 @@
 import { resolveCompany } from "@/lib/agents/resolver";
 import { researchCompany } from "@/lib/agents/research";
+import { buildBullCase } from "@/lib/agents/bull";
+import { buildBearCase } from "@/lib/agents/bear";
 import type {
     AgentStatuses,
     BearCase,
@@ -169,16 +171,10 @@ export async function bullNode(
             );
         }
 
-        const bullCase: BullCase = {
-            thesis: `${state.resolvedEntity.name} has a plausible upside case based on its stubbed business model, market expansion signals, and placeholder competitive position.`,
-            evidence: [
-                state.researchData.businessModel,
-                state.researchData.recentNews[0] ??
-                "Insufficient evidence: no recent news available.",
-                state.researchData.marketPosition,
-            ],
-            strengthRating: 7,
-        };
+        const { bullCase } = await buildBullCase(
+            state.resolvedEntity.name,
+            state.researchData
+        );
 
         return {
             ...state,
@@ -198,6 +194,7 @@ export async function bullNode(
     }
 }
 
+
 export async function bearNode(
     inputState: VerdictGraphState
 ): Promise<VerdictGraphState> {
@@ -213,17 +210,10 @@ export async function bearNode(
             );
         }
 
-        const bearCase: BearCase = {
-            risks: `${state.resolvedEntity.name} faces a plausible downside case due to competitive pressure, incomplete financial visibility, and execution risk in placeholder expansion efforts.`,
-            evidence: [
-                state.researchData.marketPosition,
-                state.researchData.financialSnapshot ??
-                "Insufficient evidence: no financial snapshot available.",
-                state.researchData.recentNews[1] ??
-                "Insufficient evidence: no second news item available.",
-            ],
-            severityRating: 5,
-        };
+        const { bearCase } = await buildBearCase(
+            state.resolvedEntity.name,
+            state.researchData
+        );
 
         return {
             ...state,
