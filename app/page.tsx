@@ -1,12 +1,20 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { InputScreen } from "@/components/input-screen";
 import { ProcessingScreen } from "@/components/processing-screen";
 import { ResultsScreen } from "@/components/results-screen";
-import { analyzeCompany, type AnalyzeResponse, type AnalyzeSuccessResponse } from "@/lib/api-client";
+import { analyzeCompany, type AnalyzeSuccessResponse } from "@/lib/api-client";
 
 type AppScreen = "input" | "processing" | "results";
+
+const pageTransition = {
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -8 },
+  transition: { duration: 0.35, ease: "easeInOut" as const },
+};
 
 export default function Home() {
   const [screen, setScreen] = useState<AppScreen>("input");
@@ -68,30 +76,34 @@ export default function Home() {
     setIsSubmitting(false);
   }, []);
 
-  if (screen === "input") {
-    return (
-      <InputScreen
-        onAnalyze={handleAnalyze}
-        isSubmitting={isSubmitting}
-        clarificationMessage={clarificationMessage}
-        errorMessage={errorMessage}
-      />
-    );
-  }
+  return (
+    <AnimatePresence mode="wait">
+      {screen === "input" && (
+        <motion.div key="input" {...pageTransition}>
+          <InputScreen
+            onAnalyze={handleAnalyze}
+            isSubmitting={isSubmitting}
+            clarificationMessage={clarificationMessage}
+            errorMessage={errorMessage}
+          />
+        </motion.div>
+      )}
 
-  if (screen === "processing") {
-    return <ProcessingScreen company={company} />;
-  }
+      {screen === "processing" && (
+        <motion.div key="processing" {...pageTransition}>
+          <ProcessingScreen company={company} />
+        </motion.div>
+      )}
 
-  if (screen === "results" && result) {
-    return (
-      <ResultsScreen
-        data={result}
-        company={company}
-        onReset={handleReset}
-      />
-    );
-  }
-
-  return null;
+      {screen === "results" && result && (
+        <motion.div key="results" {...pageTransition}>
+          <ResultsScreen
+            data={result}
+            company={company}
+            onReset={handleReset}
+          />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 }

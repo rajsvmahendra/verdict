@@ -1,7 +1,3 @@
-/**
- * VerdictBadge — Renders INVEST / WATCHLIST / PASS with appropriate color.
- */
-
 import type { Verdict } from "@/types/graph";
 
 interface VerdictBadgeProps {
@@ -9,38 +5,49 @@ interface VerdictBadgeProps {
     size?: "sm" | "md" | "lg";
 }
 
-const config: Record<
-    Verdict,
-    { label: string; className: string }
-> = {
+const config: Record<Verdict, { label: string; bg: string; text: string; border: string; glow: string }> = {
     INVEST: {
         label: "INVEST",
-        className:
-            "bg-invest-bg text-invest border border-invest/30",
+        bg: "bg-invest-bg",
+        text: "text-invest",
+        border: "border-invest/30",
+        glow: "shadow-[0_0_20px_rgba(16,185,129,0.15)]",
     },
     WATCHLIST: {
         label: "WATCHLIST",
-        className:
-            "bg-watchlist-bg text-watchlist border border-watchlist/30",
+        bg: "bg-watchlist-bg",
+        text: "text-watchlist",
+        border: "border-watchlist/30",
+        glow: "shadow-[0_0_20px_rgba(245,158,11,0.15)]",
     },
     PASS: {
         label: "PASS",
-        className:
-            "bg-pass-bg text-pass border border-pass/30",
+        bg: "bg-pass-bg",
+        text: "text-pass",
+        border: "border-pass/30",
+        glow: "shadow-[0_0_20px_rgba(239,68,68,0.15)]",
     },
 };
 
 const sizeClass = {
-    sm: "text-xs px-2 py-0.5 rounded",
-    md: "text-sm px-3 py-1 rounded-md font-medium tracking-wide",
-    lg: "text-base px-4 py-1.5 rounded-md font-semibold tracking-widest",
+    sm: "text-xs px-2.5 py-1 tracking-wider",
+    md: "text-sm px-4 py-1.5 tracking-wider",
+    lg: "text-lg px-6 py-2.5 tracking-[0.2em]",
 };
 
 export function VerdictBadge({ verdict, size = "md" }: VerdictBadgeProps) {
-    const { label, className } = config[verdict];
+    const c = config[verdict];
+
     return (
-        <span className={`inline-flex items-center font-mono ${className} ${sizeClass[size]}`}>
-            {label}
+        <span
+            className={`
+        inline-flex items-center font-mono font-bold
+        rounded-lg border
+        ${c.bg} ${c.text} ${c.border} ${c.glow}
+        ${sizeClass[size]}
+      `}
+        >
+            {c.label}
         </span>
     );
 }
