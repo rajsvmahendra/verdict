@@ -1,3 +1,5 @@
+import { resolveCompany } from "@/lib/agents/resolver";
+import { researchCompany } from "@/lib/agents/research";
 import type {
     AgentStatuses,
     BearCase,
@@ -77,29 +79,26 @@ export async function resolverNode(
             };
         }
 
-        const isAmbiguous = companyName.toLowerCase() === "apple";
+        const result = await resolveCompany(companyName);
 
-        if (isAmbiguous) {
+        if (result.resolved && result.resolvedEntity) {
             return {
-                ...setAgentStatus(state, "resolver", "complete"),
-                needsClarification: true,
-                clarificationMessage:
-                    'Input is ambiguous in stub mode. Please clarify which "Apple" you mean.',
+                ...state,
+                resolvedEntity: result.resolvedEntity,
+                needsClarification: false,
+                clarificationMessage: undefined,
+                agentStatuses: {
+                    ...state.agentStatuses,
+                    resolver: "complete",
+                },
             };
         }
 
-        const resolvedEntity: ResolvedEntity = {
-            name: companyName,
-            ticker: "STUB",
-            description: `Stub resolved entity for ${companyName}.`,
-            resolutionConfidence: 0.9,
-        };
-
+        // Needs clarification
         return {
             ...state,
-            resolvedEntity,
-            needsClarification: false,
-            clarificationMessage: undefined,
+            needsClarification: true,
+            clarificationMessage: result.clarificationMessage,
             agentStatuses: {
                 ...state.agentStatuses,
                 resolver: "complete",
@@ -130,31 +129,11 @@ export async function researchNode(
             );
         }
 
-        const sources: Source[] = [
-            createStubSource(
-                "source-company-profile",
-                `${state.resolvedEntity.name} company profile`,
-                "https://example.com/company-profile"
-            ),
-            createStubSource(
-                "source-market-summary",
-                `${state.resolvedEntity.name} market summary`,
-                "https://example.com/market-summary"
-            ),
-        ];
-
-        const researchData: ResearchData = {
-            businessModel: `${state.resolvedEntity.name} generates revenue through a stubbed multi-line business model used for graph scaffolding.`,
-            recentNews: [
-                `Stub news item: ${state.resolvedEntity.name} announced a product update.`,
-                `Stub news item: ${state.resolvedEntity.name} expanded into a new market.`,
-            ],
-            marketPosition: `${state.resolvedEntity.name} appears to hold a placeholder market position pending live research implementation.`,
-            financialSnapshot:
-                "Stub financial snapshot: limited placeholder financial data available.",
-            sources,
-            dataCompleteness: 0.6,
-        };
+        const { researchData, sources } = await researchCompany(
+            state.resolvedEntity.name,
+            state.resolvedEntity.ticker,
+            state.resolvedEntity.description
+        );
 
         return {
             ...state,
