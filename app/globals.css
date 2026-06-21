@@ -12,8 +12,9 @@
   --color-text-secondary: #a1a1aa;
   --color-text-muted: #52525b;
 
-  --color-accent: #6d5cff;
-  --color-accent-soft: #6d5cff18;
+  /* Copper accent — distinctive, finance-premium, not AI-generic */
+  --color-accent: #e08c52;
+  --color-accent-soft: #e08c5215;
 
   --color-invest: #34d399;
   --color-invest-bg: #34d39912;
@@ -118,7 +119,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Grain texture */
+/* Grain texture — adds depth without being distracting */
 body::before {
   content: '';
   position: fixed;
@@ -136,7 +137,7 @@ main {
 }
 
 ::selection {
-  background-color: rgba(109, 92, 255, 0.3);
+  background-color: rgba(224, 140, 82, 0.25);
   color: #fafafa;
 }
 
@@ -154,7 +155,7 @@ main {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #6d5cff;
+  background: #e08c52;
 }
 
 /* ─── Card System ──────────────────────────────────────────────────── */
@@ -163,7 +164,8 @@ main {
   background-color: #131316;
   border: 1px solid #27272a;
   border-radius: 14px;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+  transition:
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
     border-color 0.3s ease;
 }
@@ -185,7 +187,8 @@ main {
   border: 1px solid #27272a;
   border-radius: 14px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 1px 4px rgba(0, 0, 0, 0.25);
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+  transition:
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -216,7 +219,11 @@ main {
 
 .divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent, #27272a 30%, #27272a 70%, transparent);
+  background: linear-gradient(90deg,
+      transparent,
+      #27272a 30%,
+      #27272a 70%,
+      transparent);
 }
 
 /* ─── Section Labels ───────────────────────────────────────────────── */
@@ -229,14 +236,14 @@ main {
   color: #52525b;
 }
 
-/* ─── Interactive States ───────────────────────────────────────────── */
+/* ─── Buttons ──────────────────────────────────────────────────────── */
 
 .btn-primary {
-  background-color: #6d5cff;
-  color: white;
+  background-color: #e08c52;
+  color: #09090b;
   border: none;
   border-radius: 10px;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 14px;
   padding: 10px 20px;
   cursor: pointer;
@@ -244,9 +251,9 @@ main {
 }
 
 .btn-primary:hover {
-  background-color: #7c6dff;
+  background-color: #eba06d;
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(109, 92, 255, 0.3);
+  box-shadow: 0 4px 20px rgba(224, 140, 82, 0.35);
 }
 
 .btn-primary:active {
@@ -286,13 +293,4 @@ main {
 
 .float-delayed {
   animation: float 4s ease-in-out 1s infinite;
-}
-
-/* ─── Cursor Trail Canvas ──────────────────────────────────────────── */
-
-#cursor-trail {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 9999;
 }

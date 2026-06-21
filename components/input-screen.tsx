@@ -6,27 +6,12 @@ import { Spinner } from "@/components/ui/spinner";
 import { SearchIcon, ShieldIcon } from "@/components/ui/icons";
 
 const EXAMPLE_CHIPS = [
-    { label: "Apple", desc: "Consumer Tech" },
-    { label: "Stripe", desc: "Private Fintech" },
-    { label: "Nvidia", desc: "AI Chips" },
-    { label: "Mercury", desc: "Ambiguous" },
-    { label: "Duolingo", desc: "EdTech" },
+    { label: "Apple", desc: "Tech & Consumer" },
+    { label: "Stripe", desc: "Payments" },
+    { label: "Nvidia", desc: "Semiconductors" },
+    { label: "Mercury", desc: "Try an ambiguous name" },
+    { label: "Duolingo", desc: "Education" },
     { label: "SpaceX", desc: "Aerospace" },
-];
-
-const FEATURES = [
-    {
-        title: "6 Specialized Agents",
-        desc: "Each agent has a distinct role — from research to adversarial debate to final synthesis.",
-    },
-    {
-        title: "Evidence-Grounded",
-        desc: "Every claim is traceable to structured research data. Nothing is fabricated.",
-    },
-    {
-        title: "Three Clear Outcomes",
-        desc: "Invest, Watchlist, or Pass — backed by two separate confidence scores.",
-    },
 ];
 
 interface InputScreenProps {
@@ -67,12 +52,12 @@ export function InputScreen({
 
     return (
         <main className="min-h-screen bg-bg flex flex-col items-center px-4 relative overflow-hidden">
-            {/* Parallax background orbs */}
+            {/* Background depth layers */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
                 <motion.div
                     className="absolute w-[500px] h-[500px] rounded-full"
                     style={{
-                        background: "radial-gradient(circle, rgba(109,92,255,0.04) 0%, transparent 70%)",
+                        background: "radial-gradient(circle, rgba(224,140,82,0.04) 0%, transparent 70%)",
                         top: "10%",
                         left: "15%",
                     }}
@@ -89,20 +74,9 @@ export function InputScreen({
                     animate={{ y: [0, 15, 0], x: [0, -8, 0] }}
                     transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
                 />
-                <motion.div
-                    className="absolute w-[300px] h-[300px] rounded-full"
-                    style={{
-                        background: "radial-gradient(circle, rgba(251,191,36,0.025) 0%, transparent 70%)",
-                        top: "50%",
-                        right: "30%",
-                    }}
-                    animate={{ y: [0, -12, 0] }}
-                    transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-                />
             </div>
 
-            {/* Content */}
-            <div className="w-full max-w-2xl relative z-10 pt-[18vh] pb-16 space-y-14">
+            <div className="w-full max-w-2xl relative z-10 pt-[8vh] pb-10 space-y-10">
 
                 {/* Hero */}
                 <motion.div
@@ -111,20 +85,18 @@ export function InputScreen({
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 >
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-surface text-xs text-text-muted">
-                        <span className="w-1.5 h-1.5 rounded-full bg-invest animate-pulse" />
-                        AI-Powered Investment Committee
-                    </div>
-
                     <h1 className="text-5xl md:text-6xl font-bold tracking-[-0.03em] text-text-primary leading-[1.1]">
-                        Get a <span className="text-accent">Verdict</span> on
+                        Should you invest in
                         <br />
-                        any company.
+                        <span className="text-accent">that company?</span>
                     </h1>
 
                     <p className="text-text-secondary text-lg leading-relaxed max-w-lg mx-auto">
-                        Six AI agents research, debate, and deliver a structured
-                        investment decision — grounded in evidence, not vibes.
+                        Type any company name. Our AI research team will investigate it,
+                        debate the pros and cons, and give you a clear answer —
+                        <span className="text-text-primary font-medium"> Invest</span>,
+                        <span className="text-text-primary font-medium"> Watchlist</span>, or
+                        <span className="text-text-primary font-medium"> Pass</span>.
                     </p>
                 </motion.div>
 
@@ -140,7 +112,7 @@ export function InputScreen({
               relative flex items-center
               card-elevated overflow-hidden
               transition-all duration-400
-              ${isFocused ? "border-accent/40 shadow-[0_0_0_1px_rgba(109,92,255,0.2),0_8px_40px_rgba(0,0,0,0.5)]" : ""}
+              ${isFocused ? "border-accent/40 shadow-[0_0_0_1px_rgba(224,140,82,0.2),0_8px_40px_rgba(0,0,0,0.5)]" : ""}
               ${clarificationMessage ? "border-watchlist/30" : ""}
               ${errorMessage ? "border-pass/30" : ""}
             `}
@@ -162,7 +134,7 @@ export function InputScreen({
                             onKeyDown={handleKeyDown}
                             onFocus={() => setIsFocused(true)}
                             onBlur={() => setIsFocused(false)}
-                            placeholder="Search any company — name, ticker, or even a typo…"
+                            placeholder="Try 'Tesla', 'MSFT', or even a misspelling..."
                             disabled={isSubmitting}
                             className="
                 flex-1 bg-transparent px-4 py-5
@@ -180,7 +152,7 @@ export function InputScreen({
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.97 }}
                         >
-                            Analyse
+                            Research
                         </motion.button>
                     </motion.div>
 
@@ -198,7 +170,7 @@ export function InputScreen({
                                     <ShieldIcon className="w-4 h-4 text-watchlist mt-0.5 flex-shrink-0" />
                                     <div>
                                         <p className="text-sm text-watchlist font-semibold">
-                                            Multiple matches found
+                                            Which one did you mean?
                                         </p>
                                         <p className="text-sm text-text-secondary mt-1 leading-relaxed">
                                             {clarificationMessage}
@@ -232,7 +204,7 @@ export function InputScreen({
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.4 }}
                 >
-                    <p className="section-label text-center">Try a company</p>
+                    <p className="section-label text-center">Popular searches</p>
                     <div className="flex flex-wrap gap-2 justify-center">
                         {EXAMPLE_CHIPS.map((chip, i) => (
                             <motion.button
@@ -262,29 +234,51 @@ export function InputScreen({
                     </div>
                 </motion.div>
 
-                {/* Features */}
+                {/* How it works */}
                 <motion.div
-                    className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-4"
+                    className="space-y-5 pt-4"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.7 }}
                 >
-                    {FEATURES.map((feature, i) => (
-                        <motion.div
-                            key={feature.title}
-                            className="card p-5 space-y-2"
-                            initial={{ opacity: 0, y: 16 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.8 + i * 0.1, ease: [0.16, 1, 0.3, 1] }}
-                        >
-                            <h3 className="text-sm font-semibold text-text-primary">
-                                {feature.title}
-                            </h3>
-                            <p className="text-xs text-text-muted leading-relaxed">
-                                {feature.desc}
-                            </p>
-                        </motion.div>
-                    ))}
+                    <p className="section-label text-center">How it works</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {[
+                            {
+                                step: "1",
+                                title: "We research it",
+                                desc: "Our AI pulls real data — business model, financials, recent news, and competitive position.",
+                            },
+                            {
+                                step: "2",
+                                title: "Two sides debate",
+                                desc: "A Bull agent argues for investing. A Bear agent argues against. A Skeptic challenges the winner.",
+                            },
+                            {
+                                step: "3",
+                                title: "You get a verdict",
+                                desc: "A Chair agent weighs everything and delivers Invest, Watchlist, or Pass — with full reasoning.",
+                            },
+                        ].map((item, i) => (
+                            <motion.div
+                                key={item.step}
+                                className="card p-5 space-y-2.5"
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.8 + i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                            >
+                                <div className="w-7 h-7 rounded-lg bg-accent-soft flex items-center justify-center">
+                                    <span className="text-xs font-bold text-accent">{item.step}</span>
+                                </div>
+                                <h3 className="text-sm font-semibold text-text-primary">
+                                    {item.title}
+                                </h3>
+                                <p className="text-xs text-text-muted leading-relaxed">
+                                    {item.desc}
+                                </p>
+                            </motion.div>
+                        ))}
+                    </div>
                 </motion.div>
 
                 {/* Footer */}
@@ -294,7 +288,7 @@ export function InputScreen({
                     animate={{ opacity: 1 }}
                     transition={{ delay: 1.1 }}
                 >
-                    Built with adversarial AI agents · Not financial advice
+                    For research purposes only · This is not financial advice
                 </motion.p>
             </div>
         </main>

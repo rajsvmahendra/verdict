@@ -23,45 +23,37 @@ interface ResultsScreenProps {
 }
 
 export function ResultsScreen({ data, company, onReset }: ResultsScreenProps) {
+    const verdictDescription = {
+        INVEST: "The research strongly supports investing in this company.",
+        WATCHLIST: "The case is mixed — worth watching, but not a clear buy or sell yet.",
+        PASS: "The risks clearly outweigh the potential upside.",
+    };
+
     return (
         <main className="min-h-screen bg-bg px-4 py-8 md:py-12 relative">
-            {/* Background parallax */}
+            {/* Background */}
             <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
                 <motion.div
                     className="absolute w-[500px] h-[500px] rounded-full"
                     style={{
-                        background: "radial-gradient(circle, rgba(109,92,255,0.03) 0%, transparent 70%)",
+                        background: "radial-gradient(circle, rgba(224,140,82,0.03) 0%, transparent 70%)",
                         top: "5%",
                         right: "10%",
                     }}
                     animate={{ y: [0, -15, 0] }}
                     transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
                 />
-                <motion.div
-                    className="absolute w-[400px] h-[400px] rounded-full"
-                    style={{
-                        background: "radial-gradient(circle, rgba(52,211,153,0.025) 0%, transparent 70%)",
-                        bottom: "15%",
-                        left: "5%",
-                    }}
-                    animate={{ y: [0, 12, 0] }}
-                    transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-                />
             </div>
 
             <div className="max-w-4xl mx-auto space-y-8 relative z-10">
 
-                {/* Navigation */}
+                {/* Nav */}
                 <motion.div
                     className="flex items-center justify-between"
                     initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
                 >
-                    <button
-                        onClick={onReset}
-                        className="btn-ghost flex items-center gap-2 text-sm group"
-                    >
+                    <button onClick={onReset} className="btn-ghost flex items-center gap-2 text-sm group">
                         <ArrowLeftIcon className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                         New search
                     </button>
@@ -77,20 +69,12 @@ export function ResultsScreen({ data, company, onReset }: ResultsScreenProps) {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                 >
-                    {/* Company identity */}
                     <div className="flex items-start gap-5">
-                        <motion.div
-                            className="float-delayed"
-                            initial={{ scale: 0.9 }}
-                            animate={{ scale: 1 }}
-                            transition={{ delay: 0.2 }}
-                        >
-                            <CompanyLogo
-                                companyName={data.resolvedEntity.name}
-                                ticker={data.resolvedEntity.ticker}
-                                size="lg"
-                            />
-                        </motion.div>
+                        <CompanyLogo
+                            companyName={data.resolvedEntity.name}
+                            ticker={data.resolvedEntity.ticker}
+                            size="lg"
+                        />
                         <div className="flex-1 min-w-0 space-y-1.5">
                             <h1 className="text-2xl md:text-3xl font-bold text-text-primary tracking-tight leading-tight">
                                 {data.resolvedEntity.name}
@@ -98,106 +82,147 @@ export function ResultsScreen({ data, company, onReset }: ResultsScreenProps) {
                             <p className="text-sm text-text-secondary leading-relaxed">
                                 {data.resolvedEntity.description}
                             </p>
+                            {data.resolvedEntity.ticker && (
+                                <p className="text-xs text-text-muted font-mono">
+                                    Ticker: {data.resolvedEntity.ticker}
+                                </p>
+                            )}
                         </div>
                     </div>
 
-                    {/* Verdict + Confidence */}
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-5 pt-1">
-                        <motion.div
-                            initial={{ scale: 0.7, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ delay: 0.3, type: "spring", stiffness: 250, damping: 18 }}
-                        >
-                            <VerdictBadge verdict={data.verdict} size="lg" />
-                        </motion.div>
+                    {/* Verdict */}
+                    <div className="space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+                            <motion.div
+                                initial={{ scale: 0.7, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ delay: 0.3, type: "spring", stiffness: 250, damping: 18 }}
+                            >
+                                <VerdictBadge verdict={data.verdict} size="lg" />
+                            </motion.div>
 
-                        <div className="flex-1 grid grid-cols-2 gap-5 max-w-sm">
-                            <ConfidenceBar
-                                label="Decision Confidence"
-                                value={data.confidenceScore.decisionConfidence}
-                                color="decision"
-                                delay={0.5}
-                            />
-                            <ConfidenceBar
-                                label="Data Quality"
-                                value={data.confidenceScore.dataQualityConfidence}
-                                color="quality"
-                                delay={0.6}
-                            />
+                            <p className="text-sm text-text-secondary leading-relaxed flex-1">
+                                {verdictDescription[data.verdict]}
+                            </p>
+                        </div>
+
+                        {/* Visual Score Meter */}
+                        <div className="card-static p-5 space-y-4">
+                            <div className="grid grid-cols-2 gap-5">
+                                <ConfidenceBar
+                                    label="How confident is this decision?"
+                                    value={data.confidenceScore.decisionConfidence}
+                                    color="decision"
+                                    delay={0.4}
+                                />
+                                <ConfidenceBar
+                                    label="How reliable is the data?"
+                                    value={data.confidenceScore.dataQualityConfidence}
+                                    color="quality"
+                                    delay={0.5}
+                                />
+                            </div>
+
+                            {/* Bull vs Bear visual scale */}
+                            <div className="space-y-2 pt-2">
+                                <div className="flex justify-between text-[11px] text-text-muted">
+                                    <span>Bear side stronger</span>
+                                    <span>Bull side stronger</span>
+                                </div>
+                                <div className="relative h-3 bg-surface-raised rounded-full overflow-hidden">
+                                    <motion.div
+                                        className="absolute left-0 top-0 h-full bg-pass/30 rounded-full"
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${(data.bearCase.severityRating / 10) * 50}%` }}
+                                        transition={{ duration: 1, delay: 0.6, ease: "easeOut" }}
+                                    />
+                                    <motion.div
+                                        className="absolute right-0 top-0 h-full bg-invest/30 rounded-full"
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${(data.bullCase.strengthRating / 10) * 50}%` }}
+                                        transition={{ duration: 1, delay: 0.6, ease: "easeOut" }}
+                                    />
+                                    <motion.div
+                                        className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-text-primary rounded-full shadow-md"
+                                        initial={{ left: "50%" }}
+                                        animate={{
+                                            left: `${50 + ((data.bullCase.strengthRating - data.bearCase.severityRating) / 20) * 50}%`,
+                                        }}
+                                        transition={{ duration: 1.2, delay: 0.8, type: "spring", stiffness: 100 }}
+                                    />
+                                </div>
+                                <div className="flex justify-between text-xs">
+                                    <span className="text-pass font-mono font-semibold">
+                                        Bear {data.bearCase.severityRating}/10
+                                    </span>
+                                    <span className="text-invest font-mono font-semibold">
+                                        Bull {data.bullCase.strengthRating}/10
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Banding reason */}
+                    {/* Why this verdict */}
                     <div className="card-static p-4 space-y-1.5">
-                        <p className="section-label">Why this verdict</p>
+                        <p className="section-label">What drove this decision</p>
                         <p className="text-sm text-text-secondary leading-relaxed">
                             {data.explainability.whyThisVerdict}
                         </p>
                     </div>
                 </motion.section>
 
-                {/* ═══════════ THESIS ═══════════ */}
+                {/* ═══════════ SUMMARY ═══════════ */}
                 <ScrollReveal>
                     <section className="card-elevated p-6 md:p-8 space-y-4">
-                        <SectionHeader icon={ChairIcon} label="Investment Thesis" color="purple" />
+                        <SectionHeader icon={ChairIcon} label="The bottom line" color="purple" />
                         <p className="text-base text-text-primary leading-[1.75] font-light">
                             {data.finalThesis}
                         </p>
                     </section>
                 </ScrollReveal>
 
-                {/* ═══════════ BULL vs BEAR ═══════════ */}
+                {/* ═══════════ THE DEBATE ═══════════ */}
                 <ScrollReveal delay={0.05}>
                     <section className="space-y-4">
                         <div className="px-1">
-                            <p className="section-label">Adversarial Debate</p>
+                            <p className="section-label">The case for and against</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Bull */}
                             <ScrollReveal direction="left">
                                 <div className="card-elevated p-6 space-y-4 border-invest/10 hover:border-invest/25 transition-colors duration-300 h-full">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2.5">
                                             <AgentBadge icon={BullIcon} color="invest" />
-                                            <h3 className="text-sm font-bold text-invest">Bull Case</h3>
+                                            <h3 className="text-sm font-bold text-invest">Why you should invest</h3>
                                         </div>
                                         <ScorePill score={data.bullCase.strengthRating} label="Strength" />
                                     </div>
-
-                                    <p className="text-sm text-text-secondary leading-relaxed">
-                                        {data.bullCase.thesis}
-                                    </p>
-
-                                    <EvidenceList items={data.bullCase.evidence} color="invest" />
+                                    <p className="text-sm text-text-secondary leading-relaxed">{data.bullCase.thesis}</p>
+                                    <EvidenceList items={data.bullCase.evidence} color="invest" label="Supporting evidence" />
                                 </div>
                             </ScrollReveal>
 
-                            {/* Bear */}
                             <ScrollReveal direction="right">
                                 <div className="card-elevated p-6 space-y-4 border-pass/10 hover:border-pass/25 transition-colors duration-300 h-full">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2.5">
                                             <AgentBadge icon={BearIcon} color="pass" />
-                                            <h3 className="text-sm font-bold text-pass">Bear Case</h3>
+                                            <h3 className="text-sm font-bold text-pass">Why you shouldn&apos;t</h3>
                                         </div>
-                                        <ScorePill score={data.bearCase.severityRating} label="Severity" />
+                                        <ScorePill score={data.bearCase.severityRating} label="Risk" />
                                     </div>
-
-                                    <p className="text-sm text-text-secondary leading-relaxed">
-                                        {data.bearCase.risks}
-                                    </p>
-
-                                    <EvidenceList items={data.bearCase.evidence} color="pass" />
+                                    <p className="text-sm text-text-secondary leading-relaxed">{data.bearCase.risks}</p>
+                                    <EvidenceList items={data.bearCase.evidence} color="pass" label="Risk evidence" />
                                 </div>
                             </ScrollReveal>
                         </div>
 
-                        {/* Strongest arguments */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <ScrollReveal delay={0.1}>
                                 <div className="card-static p-5 border-invest/8 space-y-2">
-                                    <p className="section-label text-invest/60">Strongest bull argument</p>
+                                    <p className="section-label text-invest/60">Best reason to invest</p>
                                     <p className="text-sm text-text-secondary leading-relaxed">
                                         {data.explainability.strongestBullArgument}
                                     </p>
@@ -205,7 +230,7 @@ export function ResultsScreen({ data, company, onReset }: ResultsScreenProps) {
                             </ScrollReveal>
                             <ScrollReveal delay={0.15}>
                                 <div className="card-static p-5 border-pass/8 space-y-2">
-                                    <p className="section-label text-pass/60">Strongest bear argument</p>
+                                    <p className="section-label text-pass/60">Biggest concern</p>
                                     <p className="text-sm text-text-secondary leading-relaxed">
                                         {data.explainability.strongestBearArgument}
                                     </p>
@@ -218,6 +243,10 @@ export function ResultsScreen({ data, company, onReset }: ResultsScreenProps) {
                 {/* ═══════════ SKEPTIC ═══════════ */}
                 <ScrollReveal>
                     <section className="space-y-4">
+                        <div className="px-1">
+                            <p className="section-label">Quality check</p>
+                        </div>
+
                         {data.skepticInvoked && data.skepticNotes ? (
                             <div className="card-elevated p-6 space-y-5 border-watchlist/10">
                                 <div className="flex items-center justify-between">
@@ -225,24 +254,24 @@ export function ResultsScreen({ data, company, onReset }: ResultsScreenProps) {
                                         <AgentBadge icon={SkepticIcon} color="watchlist" />
                                         <div>
                                             <h3 className="text-sm font-bold text-watchlist">
-                                                Skeptic Intervened
+                                                Our Skeptic flagged some issues
                                             </h3>
                                             <p className="text-[11px] text-text-muted">
-                                                Debate was lopsided or confidence was borderline
+                                                This review was triggered because the debate was one-sided
                                             </p>
                                         </div>
                                     </div>
                                     <div className="px-3 py-1 rounded-lg bg-watchlist/10 border border-watchlist/20">
                                         <span className="text-xs font-mono text-watchlist font-semibold">
                                             {data.skepticNotes.adjustedConfidenceDelta > 0 ? "+" : ""}
-                                            {data.skepticNotes.adjustedConfidenceDelta}
+                                            {(data.skepticNotes.adjustedConfidenceDelta * 100).toFixed(0)}% confidence
                                         </span>
                                     </div>
                                 </div>
 
                                 {data.skepticNotes.flaggedClaims.length > 0 && (
                                     <div className="space-y-2.5">
-                                        <p className="section-label text-watchlist/50">Flagged Claims</p>
+                                        <p className="section-label text-watchlist/50">Claims that need more proof</p>
                                         <ul className="space-y-2">
                                             {data.skepticNotes.flaggedClaims.map((claim, i) => (
                                                 <motion.li
@@ -263,7 +292,7 @@ export function ResultsScreen({ data, company, onReset }: ResultsScreenProps) {
 
                                 {data.skepticNotes.missingConsiderations.length > 0 && (
                                     <div className="space-y-2.5">
-                                        <p className="section-label text-watchlist/50">Missing Considerations</p>
+                                        <p className="section-label text-watchlist/50">Things nobody mentioned</p>
                                         <ul className="space-y-2">
                                             {data.skepticNotes.missingConsiderations.map((item, i) => (
                                                 <motion.li
@@ -288,20 +317,18 @@ export function ResultsScreen({ data, company, onReset }: ResultsScreenProps) {
                                     <AgentBadge icon={SkepticIcon} color="muted" />
                                     <div>
                                         <h3 className="text-sm font-semibold text-text-secondary">
-                                            Skeptic Not Invoked
+                                            No additional review needed
                                         </h3>
-                                        {data.skepticSkipReason && (
-                                            <p className="text-xs text-text-muted mt-0.5 max-w-lg">
-                                                {data.skepticSkipReason}
-                                            </p>
-                                        )}
+                                        <p className="text-xs text-text-muted mt-0.5">
+                                            The debate was balanced — both sides presented solid arguments.
+                                        </p>
                                     </div>
                                 </div>
                             </div>
                         )}
 
                         <div className="card-static p-5 space-y-2">
-                            <p className="section-label">Skeptic Challenge</p>
+                            <p className="section-label">Skeptic&apos;s summary</p>
                             <p className="text-sm text-text-secondary leading-relaxed">
                                 {data.explainability.skepticChallenge}
                             </p>
@@ -309,18 +336,16 @@ export function ResultsScreen({ data, company, onReset }: ResultsScreenProps) {
                     </section>
                 </ScrollReveal>
 
-                {/* ═══════════ KEY TAKEAWAYS ═══════════ */}
+                {/* ═══════════ STRENGTHS & RISKS ═══════════ */}
                 <ScrollReveal>
                     <section className="card-elevated p-6 md:p-8 space-y-6">
-                        <p className="section-label">Key Takeaways</p>
+                        <p className="section-label">What stands out</p>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-3">
                                 <div className="flex items-center gap-2">
                                     <div className="w-2 h-2 rounded-full bg-invest" />
-                                    <p className="text-xs text-invest font-bold tracking-wider uppercase">
-                                        Strengths
-                                    </p>
+                                    <p className="text-xs text-invest font-bold tracking-wider uppercase">Strengths</p>
                                 </div>
                                 <ul className="space-y-2.5">
                                     {data.keyStrengths.map((item, i) => (
@@ -341,9 +366,7 @@ export function ResultsScreen({ data, company, onReset }: ResultsScreenProps) {
                             <div className="space-y-3">
                                 <div className="flex items-center gap-2">
                                     <div className="w-2 h-2 rounded-full bg-pass" />
-                                    <p className="text-xs text-pass font-bold tracking-wider uppercase">
-                                        Risks
-                                    </p>
+                                    <p className="text-xs text-pass font-bold tracking-wider uppercase">Risks</p>
                                 </div>
                                 <ul className="space-y-2.5">
                                     {data.keyRisks.map((item, i) => (
@@ -364,10 +387,10 @@ export function ResultsScreen({ data, company, onReset }: ResultsScreenProps) {
                     </section>
                 </ScrollReveal>
 
-                {/* ═══════════ CHAIR REASONING ═══════════ */}
+                {/* ═══════════ FINAL REASONING ═══════════ */}
                 <ScrollReveal>
                     <section className="card-elevated p-6 md:p-8 space-y-4">
-                        <SectionHeader icon={ChairIcon} label="Chair's Final Reasoning" color="purple" />
+                        <SectionHeader icon={ChairIcon} label="How we reached this verdict" color="purple" />
                         <p className="text-sm text-text-secondary leading-[1.8]">
                             {data.explainability.verdictReasoning}
                         </p>
@@ -378,12 +401,9 @@ export function ResultsScreen({ data, company, onReset }: ResultsScreenProps) {
                 <ScrollReveal>
                     <section className="card-elevated p-6 md:p-8 space-y-5">
                         <div className="flex items-center justify-between">
-                            <p className="section-label">Sources</p>
-                            <span className="text-xs text-text-muted font-mono">
-                                {data.sources.length} cited
-                            </span>
+                            <p className="section-label">Where this came from</p>
+                            <span className="text-xs text-text-muted font-mono">{data.sources.length} sources</span>
                         </div>
-
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {data.sources.map((source, i) => (
                                 <motion.div
@@ -394,9 +414,7 @@ export function ResultsScreen({ data, company, onReset }: ResultsScreenProps) {
                                     viewport={{ once: true }}
                                     transition={{ delay: i * 0.04 }}
                                 >
-                                    <p className="text-xs text-text-secondary truncate font-medium">
-                                        {source.title}
-                                    </p>
+                                    <p className="text-xs text-text-secondary truncate font-medium">{source.title}</p>
                                     {source.url ? (
                                         <a
                                             href={source.url}
@@ -407,9 +425,7 @@ export function ResultsScreen({ data, company, onReset }: ResultsScreenProps) {
                                             {source.url}
                                         </a>
                                     ) : (
-                                        <p className="text-[10px] text-text-muted">
-                                            Knowledge-based source
-                                        </p>
+                                        <p className="text-[10px] text-text-muted">Knowledge-based source</p>
                                     )}
                                 </motion.div>
                             ))}
@@ -422,10 +438,10 @@ export function ResultsScreen({ data, company, onReset }: ResultsScreenProps) {
                     <footer className="text-center pt-6 pb-12 space-y-5">
                         <div className="divider" />
                         <p className="text-xs text-text-muted">
-                            Verdict — Multi-agent AI investment research · Not financial advice
+                            Verdict — For research purposes only · Not financial advice
                         </p>
                         <button onClick={onReset} className="btn-ghost">
-                            Analyse another company
+                            Research another company
                         </button>
                     </footer>
                 </ScrollReveal>
@@ -433,8 +449,6 @@ export function ResultsScreen({ data, company, onReset }: ResultsScreenProps) {
         </main>
     );
 }
-
-// ─── Sub-Components ───────────────────────────────────────────────────────────
 
 function SectionHeader({
     icon: Icon,
@@ -492,13 +506,13 @@ function ScorePill({ score, label }: { score: number; label: string }) {
     );
 }
 
-function EvidenceList({ items, color }: { items: string[]; color: string }) {
+function EvidenceList({ items, color, label }: { items: string[]; color: string; label: string }) {
     const dotColor = color === "invest" ? "bg-invest/40" : "bg-pass/40";
     const borderColor = color === "invest" ? "border-invest/15" : "border-pass/15";
 
     return (
         <div className={`space-y-2 pt-4 border-t ${borderColor}`}>
-            <p className="section-label">Evidence</p>
+            <p className="section-label">{label}</p>
             <ul className="space-y-2">
                 {items.map((item, i) => (
                     <motion.li
