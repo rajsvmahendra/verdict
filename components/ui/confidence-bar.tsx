@@ -26,31 +26,22 @@ export function ConfidenceBar({
                     ? "bg-watchlist"
                     : "bg-pass";
 
-    const glowColor =
-        color === "quality"
-            ? "shadow-[0_0_8px_rgba(99,102,241,0.4)]"
-            : percent >= 65
-                ? "shadow-[0_0_8px_rgba(16,185,129,0.4)]"
-                : percent >= 40
-                    ? "shadow-[0_0_8px_rgba(245,158,11,0.4)]"
-                    : "shadow-[0_0_8px_rgba(239,68,68,0.4)]";
-
     return (
         <div className="space-y-2">
             <div className="flex justify-between items-center">
-                <span className="text-xs text-text-secondary font-medium tracking-wide">
+                <span className="text-[11px] text-text-muted font-medium tracking-wide">
                     {label}
                 </span>
                 <span className="text-sm font-mono font-bold text-text-primary">
                     {percent}%
                 </span>
             </div>
-            <div className="h-2 bg-surface-raised rounded-full overflow-hidden">
+            <div className="h-1.5 bg-surface-raised rounded-full overflow-hidden">
                 <motion.div
-                    className={`h-full rounded-full ${barColor} ${glowColor}`}
+                    className={`h-full rounded-full ${barColor}`}
                     initial={{ width: 0 }}
                     animate={{ width: `${percent}%` }}
-                    transition={{ duration: 1, delay, ease: "easeOut" }}
+                    transition={{ duration: 1.2, delay, ease: [0.16, 1, 0.3, 1] }}
                 />
             </div>
         </div>

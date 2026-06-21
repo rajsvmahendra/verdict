@@ -39,3 +39,18 @@
 - Confidence calculation is mechanical (calculateConfidence function) and fully derivable from structured state — not an opaque LLM-guessed number.
 
 **Trade-off:** The LLM may sometimes want to argue for a different verdict than the banding produces. We accept this — the banding table is the authority, and the LLM's job is to explain it, not override it.
+
+## 2026-06-21 — Switched from Gemini SDK to OpenRouter
+
+**Decision:** Replace `@google/generative-ai` SDK with OpenRouter via the OpenAI-compatible API.
+
+**Rationale:**
+- Free tier Gemini quota (20 req/day) was exhausted during development.
+- OpenRouter provides a unified gateway with better rate limits and 400+ model options.
+- Migration required only 2 files to change: `lib/gemini/client.ts` and `.env.local`.
+- All agent files, LangGraph nodes, and graph structure remain unchanged.
+- Gemini 2.5 Flash is still the primary model — accessed via OpenRouter instead of directly.
+
+**Trade-off:** Adds a third-party dependency in the request path. Accepted because
+OpenRouter provides redundancy, observability, and fallback routing that the direct
+SDK cannot offer.

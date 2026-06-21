@@ -4,7 +4,7 @@ interface SpinnerProps {
 }
 
 export function Spinner({ size = "md", color = "text-accent" }: SpinnerProps) {
-    const sizeMap = { sm: "w-3.5 h-3.5", md: "w-5 h-5", lg: "w-7 h-7" };
+    const sizeMap = { sm: "w-4 h-4", md: "w-5 h-5", lg: "w-7 h-7" };
 
     return (
         <div className={`${sizeMap[size]} ${color} relative`}>
@@ -12,14 +12,14 @@ export function Spinner({ size = "md", color = "text-accent" }: SpinnerProps) {
                 <circle
                     cx="12" cy="12" r="10"
                     stroke="currentColor"
-                    strokeWidth="3"
+                    strokeWidth="2.5"
                     strokeLinecap="round"
-                    className="opacity-15"
+                    className="opacity-10"
                 />
                 <path
                     d="M12 2a10 10 0 0 1 10 10"
                     stroke="currentColor"
-                    strokeWidth="3"
+                    strokeWidth="2.5"
                     strokeLinecap="round"
                 />
             </svg>

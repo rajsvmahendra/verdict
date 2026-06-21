@@ -1,119 +1,108 @@
 /**
- * Verdict — Gemini Client
+ * Verdict — LLM Client (OpenRouter)
  *
- * Typed wrapper around the Google AI SDK.
- * Single source of truth for model configuration.
- * All agents import from here — no direct SDK usage elsewhere.
+ * Replaces direct Gemini SDK with OpenRouter via OpenAI-compatible API.
+ * All agents call getStructuredModelWithFallback() — no other files change.
+ *
+ * OpenRouter gives access to 400+ models with automatic fallback routing.
+ * We use Gemini 2.5 Flash as primary, Gemini 2.0 Flash as fallback.
  */
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 
 // ─── Environment ──────────────────────────────────────────────────────────────
 
 function getApiKey(): string {
-    const key = process.env.GOOGLE_AI_API_KEY;
+    const key = process.env.OPENROUTER_API_KEY;
     if (!key) {
         throw new Error(
-            "[Verdict] GOOGLE_AI_API_KEY is not set. " +
+            "[Verdict] OPENROUTER_API_KEY is not set. " +
             "Add it to .env.local and restart the server."
         );
     }
     return key;
 }
 
-// ─── Client Singleton ─────────────────────────────────────────────────────────
+// ─── Client ───────────────────────────────────────────────────────────────────
 
-let clientInstance: GoogleGenerativeAI | null = null;
+let clientInstance: OpenAI | null = null;
 
-function getClient(): GoogleGenerativeAI {
+function getClient(): OpenAI {
     if (!clientInstance) {
-        clientInstance = new GoogleGenerativeAI(getApiKey());
+        clientInstance = new OpenAI({
+            baseURL: "https://openrouter.ai/api/v1",
+            apiKey: getApiKey(),
+            defaultHeaders: {
+                "HTTP-Referer": "https://verdict.app",
+                "X-Title": "Verdict - AI Investment Research",
+            },
+        });
     }
     return clientInstance;
 }
 
-// ─── Model Configurations ─────────────────────────────────────────────────────
+// ─── Models ───────────────────────────────────────────────────────────────────
 
-/**
- * Models available on this API key.
- *
- * gemini-2.5-flash: Fast, cost-effective — used for Resolver, Research, Bull, Bear, Skeptic
- * gemini-2.5-pro:  More capable — reserved for Chair synthesis at Strong scope
- *
- * All agents use flash at MVP scope.
- */
 export const MODELS = {
-    fast: "gemini-2.5-flash",
-    fallback: "gemini-2.0-flash",
-    capable: "gemini-2.5-pro",
+    fast: "google/gemini-2.5-flash",
+    fallback: "google/gemini-2.0-flash-001",
+    capable: "google/gemini-2.5-pro",
 } as const;
 
 export type ModelType = keyof typeof MODELS;
 
-// ─── Exported Functions ───────────────────────────────────────────────────────
+// ─── Core Call ────────────────────────────────────────────────────────────────
 
-/**
- * Get a generative model instance configured for Verdict.
- *
- * @param type - "fast" for most operations, "capable" for complex synthesis
- */
-export function getModel(type: ModelType = "fast") {
+async function callModel(
+    modelName: string,
+    prompt: string
+): Promise<string> {
     const client = getClient();
-    const modelName = MODELS[type];
 
-    return client.getGenerativeModel({
+    const response = await client.chat.completions.create({
         model: modelName,
-        generationConfig: {
-            temperature: 0.7,
-            topP: 0.95,
-            topK: 40,
-            maxOutputTokens: 4096,
-        },
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.3,
+        max_tokens: 4096,
+        response_format: { type: "json_object" },
     });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+        throw new Error(`[Verdict] Empty response from model: ${modelName}`);
+    }
+
+    return content;
 }
 
-/**
- * Get a generative model configured for structured JSON output.
- * Used by agents that need reliable structured responses.
- * Lower temperature improves JSON parsing consistency.
- */
-export function getStructuredModel(type: ModelType = "fast") {
-    const client = getClient();
-    const modelName = MODELS[type];
-
-    return client.getGenerativeModel({
-        model: modelName,
-        generationConfig: {
-            temperature: 0.3,
-            topP: 0.95,
-            topK: 40,
-            maxOutputTokens: 4096,
-            responseMimeType: "application/json",
-        },
-    });
-}
+// ─── Public API ───────────────────────────────────────────────────────────────
 
 /**
- * Attempts the fast model first, falls back to gemini-2.0-flash on 429.
- * Used by all agents to survive free-tier quota exhaustion gracefully.
+ * Calls the fast model with automatic fallback on rate limit or error.
+ * All six agents use this function — no agent touches the SDK directly.
  */
 export async function getStructuredModelWithFallback(
     prompt: string
 ): Promise<string> {
-    const models: Array<ModelType> = ["fast", "fallback"];
+    const models: Array<{ key: ModelType; name: string }> = [
+        { key: "fast", name: MODELS.fast },
+        { key: "fallback", name: MODELS.fallback },
+    ];
 
-    for (const modelType of models) {
+    for (const model of models) {
         try {
-            const model = getStructuredModel(modelType);
-            const result = await model.generateContent(prompt);
-            return result.response.text();
+            const result = await callModel(model.name, prompt);
+            return result;
         } catch (error) {
             const is429 =
-                error instanceof Error && error.message.includes("429");
+                error instanceof Error &&
+                (error.message.includes("429") ||
+                    error.message.includes("quota") ||
+                    error.message.includes("rate limit"));
 
-            if (is429 && modelType !== "fallback") {
+            if (is429 && model.key !== "fallback") {
                 console.warn(
-                    `[Verdict] ${MODELS[modelType]} quota exceeded, falling back to ${MODELS.fallback}`
+                    `[Verdict] ${model.name} rate limited, falling back to ${MODELS.fallback}`
                 );
                 continue;
             }
@@ -122,7 +111,21 @@ export async function getStructuredModelWithFallback(
         }
     }
 
-    throw new Error("[Verdict] All models exhausted — quota exceeded on all available models.");
+    throw new Error(
+        "[Verdict] All models exhausted — rate limited on all available models."
+    );
 }
 
+// ─── Legacy exports (unused but kept for type compatibility) ──────────────────
 
+export function getModel(_type: ModelType = "fast") {
+    throw new Error(
+        "[Verdict] getModel() is not available with OpenRouter. Use getStructuredModelWithFallback()."
+    );
+}
+
+export function getStructuredModel(_type: ModelType = "fast") {
+    throw new Error(
+        "[Verdict] getStructuredModel() is not available with OpenRouter. Use getStructuredModelWithFallback()."
+    );
+}

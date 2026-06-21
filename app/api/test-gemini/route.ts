@@ -1,26 +1,23 @@
 /**
- * Temporary test route to verify Gemini SDK connection.
- * Will be removed after Step 2 is complete.
+ * Temporary test route to verify OpenRouter connection.
  */
 
 import { NextResponse } from "next/server";
-import { getModel } from "@/lib/gemini";
+import { getStructuredModelWithFallback } from "@/lib/gemini";
 
 export async function GET() {
     try {
-        const model = getModel("fast");
-        const result = await model.generateContent(
-            "Respond with exactly: GEMINI_CONNECTION_OK"
+        const result = await getStructuredModelWithFallback(
+            'Respond with exactly this JSON: {"status": "OPENROUTER_CONNECTION_OK", "model": "gemini-2.5-flash"}'
         );
-        const text = result.response.text().trim();
 
         return NextResponse.json({
             status: "success",
-            response: text,
-            model: "gemini-2.5-flash",
+            response: JSON.parse(result),
+            provider: "OpenRouter",
         });
     } catch (error) {
-        console.error("[Verdict] Gemini test failed:", error);
+        console.error("[Verdict] OpenRouter test failed:", error);
         return NextResponse.json(
             {
                 status: "error",
