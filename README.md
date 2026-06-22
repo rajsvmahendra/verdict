@@ -29,38 +29,48 @@ Every verdict comes with full reasoning, traceable evidence, and two separate co
 ---
 
 ## How It Works
+
+```text
 User Input
-│
-▼
+    │
+    ▼
 ┌─────────────┐
-│ Resolver │ Identifies the exact company (handles typos, tickers, ambiguous names)
+│  Resolver   │  Identifies the exact company
+│             │  (handles typos, tickers, ambiguous names)
 └─────────────┘
-│
-▼
+    │
+    ▼
 ┌─────────────┐
-│ Research │ Gathers business model, financials, market data, recent news
+│  Research   │  Gathers business model, financials,
+│             │  market data, and recent news
 └─────────────┘
-│
-├─────────────────────┐
-▼ ▼
-┌─────────┐ ┌──────────┐
-│ Bull │ │ Bear │ Run in parallel — same evidence, opposite conclusions
-└─────────┘ └──────────┘
-│ │
-└──────────┬──────────┘
-▼
-┌──────────────────┐
-│ Skeptic (if │ Only fires when debate is lopsided or confidence is borderline
-│ needed) │
-└──────────────────┘
-│
-▼
-┌────────────┐
-│ Chair │ Synthesizes everything into the final verdict
-└────────────┘
-│
-▼
-INVEST / WATCHLIST / PASS
+    │
+    ├─────────────────────┐
+    ▼                     ▼
+┌─────────┐         ┌──────────┐
+│  Bull   │         │   Bear   │
+└─────────┘         └──────────┘
+    │                     │
+    │ Same evidence,      │ Same evidence,
+    │ bullish thesis      │ bearish thesis
+    └──────────┬──────────┘
+               ▼
+    ┌──────────────────┐
+    │ Skeptic (if      │
+    │ needed)          │
+    └──────────────────┘
+               │
+               │ Only fires when debate is
+               │ lopsided or confidence is borderline
+               ▼
+        ┌────────────┐
+        │   Chair    │
+        └────────────┘
+               │
+               │ Synthesizes all findings
+               ▼
+    INVEST / WATCHLIST / PASS
+```
 
 
 ### The Verdict System
@@ -147,47 +157,54 @@ Synthesizes all prior agent outputs into the final verdict using a deterministic
 The verdict is determined algorithmically **before** the LLM writes the narrative. The LLM explains — it cannot override.
 
 ---
-
 ## Project Structure
+
+```text id="8qg4vl"
 verdict/
 ├── app/
-│ ├── api/
-│ │ ├── analyze/ # POST endpoint — runs the full graph
-│ │ └── test-gemini/ # Connection test route
-│ ├── globals.css # Design system (Tailwind v4 @theme)
-│ ├── layout.tsx
-│ └── page.tsx # Root screen state manager
+│   ├── api/
+│   │   ├── analyze/              # POST endpoint — runs the full graph
+│   │   └── test-gemini/          # Connection test route
+│   ├── globals.css               # Design system (Tailwind v4 @theme)
+│   ├── layout.tsx
+│   └── page.tsx                  # Root screen state manager
+│
 ├── components/
-│ ├── input-screen.tsx # Search input with disambiguation handling
-│ ├── processing-screen.tsx # Live agent pipeline visualization
-│ ├── results-screen.tsx # Full verdict display
-│ └── ui/
-│ ├── company-logo.tsx # Logo fetch with cascade fallback
-│ ├── confidence-bar.tsx
-│ ├── icons.tsx # Full SVG icon set
-│ ├── scroll-reveal.tsx
-│ ├── skeleton-loader.tsx
-│ ├── spinner.tsx
-│ └── verdict-badge.tsx
+│   ├── input-screen.tsx          # Search input with disambiguation handling
+│   ├── processing-screen.tsx     # Live agent pipeline visualization
+│   ├── results-screen.tsx        # Full verdict display
+│   └── ui/
+│       ├── company-logo.tsx      # Logo fetch with cascade fallback
+│       ├── confidence-bar.tsx
+│       ├── icons.tsx             # Full SVG icon set
+│       ├── scroll-reveal.tsx
+│       ├── skeleton-loader.tsx
+│       ├── spinner.tsx
+│       └── verdict-badge.tsx
+│
 ├── lib/
-│ ├── agents/
-│ │ ├── resolver.ts # Gemini-powered entity resolution
-│ │ ├── research.ts # Structured evidence gathering
-│ │ ├── bull.ts # Bullish case builder
-│ │ ├── bear.ts # Bearish case builder
-│ │ ├── skeptic.ts # Conditional stress-tester
-│ │ └── chair.ts # Verdict synthesis + banding logic
-│ ├── gemini/
-│ │ ├── client.ts # OpenRouter client wrapper
-│ │ └── index.ts
-│ ├── api-client.ts # Frontend type-safe API client
-│ └── env.ts # Typed environment variable loader
+│   ├── agents/
+│   │   ├── resolver.ts           # Gemini-powered entity resolution
+│   │   ├── research.ts           # Structured evidence gathering
+│   │   ├── bull.ts               # Bullish case builder
+│   │   ├── bear.ts               # Bearish case builder
+│   │   ├── skeptic.ts            # Conditional stress-tester
+│   │   └── chair.ts              # Verdict synthesis + banding logic
+│   │
+│   ├── gemini/
+│   │   ├── client.ts             # OpenRouter client wrapper
+│   │   └── index.ts
+│   │
+│   ├── api-client.ts             # Frontend type-safe API client
+│   └── env.ts                    # Typed environment variable loader
+│
 ├── types/
-│ └── graph.ts # Complete typed state schema
+│   └── graph.ts                  # Complete typed state schema
+│
 └── docs/
-├── decisions.md # Architectural decision log
-└── build-log.md # Debug session log
-
+    ├── decisions.md              # Architectural decision log
+    └── build-log.md              # Debug session log
+```
 
 ---
 ## Getting Started
