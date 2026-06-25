@@ -1,41 +1,36 @@
 /**
- * Verdict — LLM Client (OpenRouter)
+ * Verdict — LLM Client (Groq)
  *
- * Replaces direct Gemini SDK with OpenRouter via OpenAI-compatible API.
+ * Replaces OpenRouter with Groq for faster inference and generous free tier.
  * All agents call getStructuredModelWithFallback() — no other files change.
  *
- * OpenRouter gives access to 400+ models with automatic fallback routing.
- * We use Gemini 2.5 Flash as primary, Gemini 2.0 Flash as fallback.
+ * Primary model: llama-3.3-70b-versatile (best quality on Groq free tier)
+ * Fallback model: llama-3.1-8b-instant (faster, lighter)
  */
 
-import OpenAI from "openai";
+import Groq from "groq-sdk";
 
 // ─── Environment ──────────────────────────────────────────────────────────────
 
 function getApiKey(): string {
-    const key = process.env.OPENROUTER_API_KEY;
+    const key = process.env.GROQ_API_KEY;
     if (!key) {
         throw new Error(
-            "[Verdict] OPENROUTER_API_KEY is not set. " +
+            "[Verdict] GROQ_API_KEY is not set. " +
             "Add it to .env.local and restart the server."
         );
     }
     return key;
 }
 
-// ─── Client ───────────────────────────────────────────────────────────────────
+// ─── Client Singleton ─────────────────────────────────────────────────────────
 
-let clientInstance: OpenAI | null = null;
+let clientInstance: Groq | null = null;
 
-function getClient(): OpenAI {
+function getClient(): Groq {
     if (!clientInstance) {
-        clientInstance = new OpenAI({
-            baseURL: "https://openrouter.ai/api/v1",
+        clientInstance = new Groq({
             apiKey: getApiKey(),
-            defaultHeaders: {
-                "HTTP-Referer": "https://verdict.app",
-                "X-Title": "Verdict - AI Investment Research",
-            },
         });
     }
     return clientInstance;
@@ -44,9 +39,9 @@ function getClient(): OpenAI {
 // ─── Models ───────────────────────────────────────────────────────────────────
 
 export const MODELS = {
-    fast: "google/gemini-2.5-flash",
-    fallback: "google/gemini-2.0-flash-001",
-    capable: "google/gemini-2.5-pro",
+    fast: "llama-3.3-70b-versatile",
+    fallback: "llama-3.1-8b-instant",
+    capable: "llama-3.3-70b-versatile",
 } as const;
 
 export type ModelType = keyof typeof MODELS;
@@ -61,10 +56,19 @@ async function callModel(
 
     const response = await client.chat.completions.create({
         model: modelName,
-        messages: [{ role: "user", content: prompt }],
+        messages: [
+            {
+                role: "system",
+                content:
+                    "You are a structured financial research assistant. Always respond with valid JSON only. No markdown, no explanation outside the JSON object.",
+            },
+            {
+                role: "user",
+                content: prompt,
+            },
+        ],
         temperature: 0.3,
         max_tokens: 4096,
-        response_format: { type: "json_object" },
     });
 
     const content = response.choices[0]?.message?.content;
@@ -72,15 +76,19 @@ async function callModel(
         throw new Error(`[Verdict] Empty response from model: ${modelName}`);
     }
 
-    return content;
+    // Strip markdown code blocks if model wraps JSON in them
+    const cleaned = content
+        .trim()
+        .replace(/^```json\s*/i, "")
+        .replace(/^```\s*/i, "")
+        .replace(/\s*```$/i, "")
+        .trim();
+
+    return cleaned;
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
-/**
- * Calls the fast model with automatic fallback on rate limit or error.
- * All six agents use this function — no agent touches the SDK directly.
- */
 export async function getStructuredModelWithFallback(
     prompt: string
 ): Promise<string> {
@@ -94,13 +102,13 @@ export async function getStructuredModelWithFallback(
             const result = await callModel(model.name, prompt);
             return result;
         } catch (error) {
-            const is429 =
+            const isRateLimit =
                 error instanceof Error &&
                 (error.message.includes("429") ||
-                    error.message.includes("quota") ||
-                    error.message.includes("rate limit"));
+                    error.message.includes("rate limit") ||
+                    error.message.includes("quota"));
 
-            if (is429 && model.key !== "fallback") {
+            if (isRateLimit && model.key !== "fallback") {
                 console.warn(
                     `[Verdict] ${model.name} rate limited, falling back to ${MODELS.fallback}`
                 );
@@ -116,16 +124,16 @@ export async function getStructuredModelWithFallback(
     );
 }
 
-// ─── Legacy exports (unused but kept for type compatibility) ──────────────────
+// ─── Legacy stubs (kept for import compatibility) ─────────────────────────────
 
 export function getModel(_type: ModelType = "fast") {
     throw new Error(
-        "[Verdict] getModel() is not available with OpenRouter. Use getStructuredModelWithFallback()."
+        "[Verdict] getModel() is not available. Use getStructuredModelWithFallback()."
     );
 }
 
 export function getStructuredModel(_type: ModelType = "fast") {
     throw new Error(
-        "[Verdict] getStructuredModel() is not available with OpenRouter. Use getStructuredModelWithFallback()."
+        "[Verdict] getStructuredModel() is not available. Use getStructuredModelWithFallback()."
     );
 }

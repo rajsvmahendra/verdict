@@ -15,5 +15,5 @@ function requireEnvVar(name: string): string {
 }
 
 export const env = {
-    OPENROUTER_API_KEY: requireEnvVar("OPENROUTER_API_KEY"),
+    GROQ_API_KEY: requireEnvVar("GROQ_API_KEY"),
 } as const;
